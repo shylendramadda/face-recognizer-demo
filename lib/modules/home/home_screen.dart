@@ -241,7 +241,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // if server image
     if (name.isNotEmpty && name.contains(':')) {
       final names = name.split(":");
-      filePath = names.last;
+      filePath = AppConstants.imageBaseUrl + names.last;
       isNetworkImage = true;
     }
 
