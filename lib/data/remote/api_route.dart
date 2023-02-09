@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 enum APIType {
   getData,
   uploadFile,
+  processFile,
 }
 
 class APIRoute implements APIRouteConfigurable {
@@ -21,6 +22,8 @@ class APIRoute implements APIRouteConfigurable {
     switch (type) {
       case APIType.getData:
         return getData();
+      case APIType.processFile:
+        return processFile();
       default:
         return null;
     }
@@ -29,6 +32,13 @@ class APIRoute implements APIRouteConfigurable {
   RequestOptions getData() {
     return RequestOptions(
       path: '',
+      method: APIMethod.get,
+    );
+  }
+
+  RequestOptions? processFile() {
+    return RequestOptions(
+      path: '/trigger/FD/pic_source',
       method: APIMethod.get,
     );
   }

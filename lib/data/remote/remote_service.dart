@@ -1,4 +1,5 @@
 import 'package:fr_demo/data/models/face_detection.dart';
+import 'package:fr_demo/data/models/response_message.dart';
 import 'package:fr_demo/data/remote/api_client.dart';
 import 'package:fr_demo/data/remote/api_response.dart';
 import 'package:fr_demo/data/remote/api_route.dart';
@@ -22,6 +23,16 @@ class RemoteService extends GetxService {
     } else {
       return null;
     }
+  }
+
+  Future<ResponseMessage?> processFile() async {
+    final result = await apiClient.request(
+      route: APIRoute(APIType.processFile),
+      create: () =>
+          APIResponse<ResponseMessage>(create: () => ResponseMessage()),
+    );
+    final response = result.response?.data;
+    return response;
   }
 
   Future<bool> checkNetwork() async {

@@ -1,4 +1,5 @@
 import 'package:fr_demo/config/routes.dart';
+import 'package:fr_demo/modules/settings/settings_screen.dart';
 import 'package:fr_demo/modules/splash/splash_screen.dart';
 import 'package:get/get.dart';
 
@@ -38,6 +39,10 @@ class Pages {
       binding: BindingsBuilder(() {
         Get.lazyPut(() => HomeController());
       }),
+    ),
+    GetPage(
+      name: Routes.settings,
+      page: () => const SettingsScreen(),
     ),
   ];
 }

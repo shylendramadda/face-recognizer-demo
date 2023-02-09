@@ -4,6 +4,7 @@ class FaceDetection extends Decodable<FaceDetection> {
   String? name;
   String? brief;
   String? uuid;
+  String? filePath;
   int? faceDetectedOn;
 
   FaceDetection({this.name, this.brief});
@@ -12,6 +13,7 @@ class FaceDetection extends Decodable<FaceDetection> {
     name = json['name'] ?? '';
     brief = json['brief'] ?? '';
     uuid = json['uuid'] ?? '';
+    uuid = json['filePath'] ?? '';
     faceDetectedOn = json['faceDetectedOn'] ?? '';
   }
 
@@ -20,6 +22,7 @@ class FaceDetection extends Decodable<FaceDetection> {
     data['name'] = name;
     data['brief'] = brief;
     data['uuid'] = uuid;
+    data['filePath'] = filePath;
     data['faceDetectedOn'] = faceDetectedOn;
     return data;
   }

@@ -2,19 +2,25 @@ import 'package:fr_demo/data/remote/decodable.dart';
 
 class ResponseMessage extends Decodable<ResponseMessage> {
   String? message;
-  bool? verified;
+  String? code;
+  String? uuid;
+  String? entityUid;
 
-  ResponseMessage({this.message, this.verified});
+  ResponseMessage({this.message, this.uuid});
 
   ResponseMessage.fromJson(Map<String, dynamic> json) {
     message = json['message'] ?? 'No response message from server';
-    verified = json['verified'] ?? false;
+    code = json['code'] ?? '';
+    uuid = json['uuid'] ?? '';
+    entityUid = json['entityUid'] ?? '';
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['message'] = message;
-    data['verified'] = verified;
+    data['code'] = code;
+    data['uuid'] = uuid;
+    data['entityUid'] = entityUid;
     return data;
   }
 

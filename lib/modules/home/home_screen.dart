@@ -72,6 +72,11 @@ class _HomeScreenState extends State<HomeScreen> {
             tooltip: 'Refresh',
             onPressed: () => loadData(),
           ),
+          IconButton(
+            icon: const Icon(Icons.settings),
+            tooltip: 'Settings',
+            onPressed: () => Get.toNamed(Routes.settings),
+          ),
         ],
       ),
       body: WillPopScope(
@@ -108,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
       itemCount: fileDataList.length,
       itemBuilder: (context, index) {
         var fileData = fileDataList[index];
-        final filePath = fileData.filePath.toString();
+        final filePath = fileData.filePath ?? '';
         return InkWell(
           onTap: () => onFileTap(filePath),
           child: listItem(fileData),
@@ -125,7 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          !kIsWeb ? filePreviewImage(fileData) : Container(),
+          filePreviewImage(fileData),
           const SizedBox(width: 16),
           fileContent(fileData),
         ],
@@ -134,7 +139,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Expanded fileContent(FileData fileData) {
-    final filePath = fileData.filePath.toString();
+    final filePath = fileData.filePath ?? '';
     var fileName = filePath.split('/').last;
     final name = fileData.name;
     bool isFromServer = filePath.startsWith(AppConstants.baseUrl) ||
@@ -143,12 +148,15 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            fileName,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-          ),
+          fileName.isNotEmpty
+              ? Text(
+                  fileName,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.bold),
+                )
+              : const SizedBox(),
           FutureBuilder(
             future: AppUtils.getFileSize(filePath, 2),
             builder: (BuildContext context, snapshot) {
@@ -200,7 +208,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Container filePreviewImage(FileData fileData) {
-    final filePath = fileData.filePath.toString();
+    final filePath = fileData.filePath ?? '';
     bool isVideo = false;
     if (filePath.isNotEmpty) {
       isVideo = filePath.endsWith('.mp4');
@@ -229,12 +237,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     )
                   : Image.file(File(filePath))
               : Image.asset(
-                  'assets/images/person.png',
+                  'assets/images/video_preview.png',
                   width: 300,
                   height: 200,
                 )
           : Image.asset(
-              'assets/images/video_preview.png',
+              'assets/images/person_preview.png',
               width: 300,
               height: 200,
             ),
@@ -309,7 +317,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   getServerData() async {
     faceDetections = [];
-    faceDetections?.clear();
     fileDataList.clear();
     // final isExists = await AppUtils.isNetworkAvailable();
     // if (!isExists) {
@@ -320,12 +327,10 @@ class _HomeScreenState extends State<HomeScreen> {
     if (faceDetections != null && faceDetections!.isNotEmpty) {
       for (FaceDetection fd in faceDetections!) {
         final fileData = FileData();
+        fileData.filePath = fd.filePath;
         fileData.name = fd.name;
         fileData.dateTime = AppUtils.getDate(fd.faceDetectedOn ?? 0);
         fileDataList.add(fileData);
-        // if (AppUtils.isSupportedFormat(fd.)) {
-        //   allFileList.add(AppConstants.fileBaseUrl + fd.);
-        // }
       }
       setState(() {});
     }
@@ -425,61 +430,6 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (BuildContext context) {
         return alert;
-      },
-    );
-  }
-
-  void _showVideoTypeDialog(String filePath, BuildContext context) {
-    Widget okButton = TextButton(
-      child: const Text("Upload"),
-      onPressed: () async {
-        Get.back();
-        startUpload(filePath);
-      },
-    );
-    Widget cancelButton = TextButton(
-      child: const Text("Cancel"),
-      onPressed: () {
-        Get.back();
-      },
-    );
-
-    // show the dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) => AlertDialog(
-            title: const Text('Select Video Type'),
-            content: DropdownButton<String>(
-              value: selectedVideoType,
-              icon: const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Icon(Icons.arrow_drop_down_circle),
-              ),
-              elevation: 16,
-              style: const TextStyle(color: Colors.deepPurple),
-              underline: Container(
-                height: 2,
-                color: Colors.grey,
-              ),
-              onChanged: (String? value) {
-                // This is called when the user selects an item.
-                setState(() {
-                  selectedVideoType = value!;
-                });
-              },
-              items:
-                  videoTypeStrings.map<DropdownMenuItem<String>>((String item) {
-                return DropdownMenuItem<String>(
-                  value: item,
-                  child: Text(item),
-                );
-              }).toList(),
-            ),
-            actions: [cancelButton, okButton],
-          ),
-        );
       },
     );
   }

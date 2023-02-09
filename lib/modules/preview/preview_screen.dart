@@ -7,7 +7,6 @@ import 'package:toast/toast.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../config/routes.dart';
-import '../../utils/app_colors.dart';
 import '../../utils/app_utils.dart';
 import '../components/progress_bar/progress_view.dart';
 import '../home/home_controller.dart';
@@ -18,9 +17,6 @@ bool isVideo = false;
 bool isNetworkImage = false;
 bool isNetworkVideo = false;
 bool isVideoPlayerInit = false;
-// List<VideoType>? videoTypes = [];
-List<String> videoTypeStrings = [];
-String selectedVideoType = 'Other';
 
 class PreviewScreen extends StatefulWidget {
   const PreviewScreen({Key? key}) : super(key: key);
@@ -39,13 +35,13 @@ class _PreviewScreenState extends State<PreviewScreen> {
     filePath = arguments['filePath'].toString();
     if (filePath.isNotEmpty) {
       fileName = filePath.split('/').last;
-    }
-    isVideo = filePath.endsWith('.mp4');
-    if (isVideo) {
-      isNetworkVideo = AppUtils.isNetworkFile(filePath);
-      initVideoPlayer();
-    } else {
-      isNetworkImage = AppUtils.isNetworkFile(filePath);
+      isVideo = filePath.endsWith('.mp4');
+      if (isVideo) {
+        isNetworkVideo = AppUtils.isNetworkFile(filePath);
+        initVideoPlayer();
+      } else {
+        isNetworkImage = AppUtils.isNetworkFile(filePath);
+      }
     }
     super.initState();
   }
@@ -77,18 +73,23 @@ class _PreviewScreenState extends State<PreviewScreen> {
                 ),
                 Expanded(
                   child: Container(
-                    color: AppColors.primary,
-                    child: isVideo
-                        ? loadVideoPlayer(filePath, context)
-                        : isNetworkImage
-                            ? CachedNetworkImage(
-                                imageUrl: filePath,
-                                placeholder: (context, url) =>
-                                    const CircularProgressIndicator(),
-                                errorWidget: (context, url, error) =>
-                                    const Icon(Icons.error),
-                              )
-                            : Image.file(File(filePath)),
+                    child: filePath.isNotEmpty
+                        ? isVideo
+                            ? loadVideoPlayer(filePath, context)
+                            : isNetworkImage
+                                ? CachedNetworkImage(
+                                    imageUrl: filePath,
+                                    placeholder: (context, url) =>
+                                        const CircularProgressIndicator(),
+                                    errorWidget: (context, url, error) =>
+                                        const Icon(Icons.error),
+                                  )
+                                : Image.file(File(filePath))
+                        : Image.asset(
+                            'assets/images/person_preview.png',
+                            width: 300,
+                            height: 200,
+                          ),
                   ),
                 ),
               ],
@@ -97,61 +98,6 @@ class _PreviewScreenState extends State<PreviewScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  void _showVideoTypeDialog(String filePath, BuildContext context) {
-    Widget okButton = TextButton(
-      child: const Text("Upload"),
-      onPressed: () async {
-        Get.back();
-        startUpload(filePath);
-      },
-    );
-    Widget cancelButton = TextButton(
-      child: const Text("Cancel"),
-      onPressed: () {
-        Get.back();
-      },
-    );
-
-    // show the dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) => AlertDialog(
-            title: const Text('Select Video Type'),
-            content: DropdownButton<String>(
-              value: selectedVideoType,
-              icon: const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Icon(Icons.arrow_drop_down_circle),
-              ),
-              elevation: 16,
-              style: const TextStyle(color: Colors.deepPurple),
-              underline: Container(
-                height: 2,
-                color: Colors.grey,
-              ),
-              onChanged: (String? value) {
-                // This is called when the user selects an item.
-                setState(() {
-                  selectedVideoType = value!;
-                });
-              },
-              items:
-                  videoTypeStrings.map<DropdownMenuItem<String>>((String item) {
-                return DropdownMenuItem<String>(
-                  value: item,
-                  child: Text(item),
-                );
-              }).toList(),
-            ),
-            actions: [cancelButton, okButton],
-          ),
-        );
-      },
     );
   }
 

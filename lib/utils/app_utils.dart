@@ -48,12 +48,16 @@ class AppUtils {
     if (filepath.startsWith("https")) {
       return '';
     }
-    var file = File(filepath);
-    int bytes = await file.length();
-    if (bytes <= 0) return "0 B";
-    const suffixes = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
-    var i = (log(bytes) / log(1024)).floor();
-    return '${(bytes / pow(1024, i)).toStringAsFixed(decimals)} ${suffixes[i]}';
+    if (filepath.isNotEmpty) {
+      var file = File(filepath);
+      int bytes = await file.length();
+      if (bytes <= 0) return "0 B";
+      const suffixes = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+      var i = (log(bytes) / log(1024)).floor();
+      return '${(bytes / pow(1024, i)).toStringAsFixed(decimals)} ${suffixes[i]}';
+    } else {
+      return '';
+    }
   }
 
   static bool isNetworkFile(String filePath) {
