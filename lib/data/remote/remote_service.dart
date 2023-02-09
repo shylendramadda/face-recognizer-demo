@@ -1,22 +1,35 @@
-import 'package:dio/dio.dart' as dio;
+import 'package:fr_demo/data/models/face_detection.dart';
 import 'package:fr_demo/data/remote/api_client.dart';
 import 'package:fr_demo/data/remote/api_response.dart';
 import 'package:fr_demo/data/remote/api_route.dart';
+import 'package:fr_demo/utils/app_constants.dart';
+import 'package:fr_demo/utils/app_utils.dart';
 import 'package:get/get.dart';
-
-import '../models/response_message.dart';
 
 class RemoteService extends GetxService {
   final apiClient = APIClient();
 
-  Future<ResponseMessage?> doRegister(dio.FormData data) async {
-    final result = await apiClient.request(
-      route: APIRoute(APIType.register),
-      create: () =>
-          APIResponse<ResponseMessage>(create: () => ResponseMessage()),
-      data: data,
-    );
-    final ResponseMessage? responseMessage = result.response?.data;
-    return responseMessage;
+  Future<List<FaceDetection>?> getData() async {
+    // if (await checkNetwork()) {
+    if (true) {
+      final result = await apiClient.request(
+        route: APIRoute(APIType.getData),
+        create: () =>
+            APIListResponse<FaceDetection>(create: () => FaceDetection()),
+      );
+      final response = result.response?.data;
+      return response;
+    } else {
+      return null;
+    }
+  }
+
+  Future<bool> checkNetwork() async {
+    final isExists = await AppUtils.isNetworkAvailable();
+    if (!isExists) {
+      AppUtils.showToast(AppConstants.noInternet);
+      return false;
+    }
+    return true;
   }
 }

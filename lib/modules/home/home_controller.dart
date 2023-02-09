@@ -1,12 +1,16 @@
+// ignore_for_file: avoid_print
+
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:fr_demo/data/models/face_detection.dart';
 import 'package:fr_demo/utils/app_utils.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 // ignore: depend_on_referenced_packages
 import 'package:http_parser/http_parser.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../data/remote/remote_service.dart';
 import '../../utils/app_constants.dart';
@@ -16,11 +20,6 @@ class HomeController extends GetxController {
   RemoteService remoteService = Get.find();
 
   Future<bool> uploadFile(String filePath, Position? position) async {
-    final isExists = await AppUtils.isNetworkAvailable();
-    if (!isExists) {
-      AppUtils.showToast(AppConstants.noInternet);
-      return false;
-    }
     try {
       ProgressController.showLoader();
       /* var fileSize = await AppUtils.getFileSize(filePath, 1);
@@ -35,11 +34,18 @@ class HomeController extends GetxController {
       } */
       var latitude = position?.latitude;
       var longitude = position?.longitude;
+      final uuid = const Uuid().v4();
       var request = http.MultipartRequest(
-          'POST', Uri.parse('${AppConstants.baseUrl}/upload'));
-      request.fields.addAll({
-        'lat': '$latitude',
-        'lng': '$longitude',
+          'POST', Uri.parse('${AppConstants.baseUrl}/fr/upload/$uuid/image'));
+      // request.fields.addAll({
+      //   'lat': '$latitude',
+      //   'lng': '$longitude',
+      // });
+
+      request.headers.addAll({
+        "tenantUid": "test",
+        "tuid": "test",
+        "Authorization": "Basic YWRtaW46YWRtaW4="
       });
       debugPrint(request.url.toString());
       return upload(request, filePath);
@@ -67,14 +73,6 @@ class HomeController extends GetxController {
         final respString = await res.stream.bytesToString();
         debugPrint('respString: $respString');
         AppUtils.showToast(AppConstants.fileUploadSuccess);
-        try {
-          final file = File(filePath);
-          await file.delete();
-          return true;
-        } catch (e) {
-          ProgressController.hideLoader();
-          e.printError();
-        }
       } else {
         AppUtils.showToast(AppConstants.uploadIssue);
       }
@@ -84,5 +82,21 @@ class HomeController extends GetxController {
       AppUtils.showToast(AppConstants.uploadIssue);
     }
     return false;
+  }
+
+  Future<List<FaceDetection>?> getServerData() async {
+    ProgressController.showLoader();
+    try {
+      List<FaceDetection>? response = await remoteService.getData();
+      ProgressController.hideLoader();
+      response?.forEach((element) {
+        print('Response: ${element.name}');
+      });
+      return response;
+    } catch (e) {
+      ProgressController.hideLoader();
+      AppUtils.showToast('${AppConstants.somethingWentWrong}, ${e.toString()}');
+    }
+    return null;
   }
 }

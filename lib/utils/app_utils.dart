@@ -5,6 +5,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:fr_demo/utils/app_colors.dart';
 import 'package:geolocator_platform_interface/src/models/position.dart';
+import 'package:intl/intl.dart';
 import 'package:toast/toast.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -81,5 +82,12 @@ class AppUtils {
         filePath.endsWith('.jpeg') ||
         filePath.endsWith('.png') ||
         filePath.endsWith('.mp4');
+  }
+
+  static String getDate(int myValue) {
+    final df = DateFormat('dd-MM-yyyy hh:mm a');
+    final date = df.format(DateTime.fromMillisecondsSinceEpoch(myValue));
+    debugPrint(date);
+    return date;
   }
 }

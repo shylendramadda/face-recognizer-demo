@@ -1,11 +1,7 @@
 import 'package:dio/dio.dart';
 
 enum APIType {
-  register,
-  sendOtp,
-  verifyOtp,
-  getVideoTypes,
-  getVideos,
+  getData,
   uploadFile,
 }
 
@@ -23,62 +19,17 @@ class APIRoute implements APIRouteConfigurable {
   @override
   RequestOptions? getConfig() {
     switch (type) {
-      case APIType.register:
-        return registerUser();
-      case APIType.sendOtp:
-        return sendOtp();
-      case APIType.verifyOtp:
-        return validateOtp();
-      case APIType.getVideoTypes:
-        return getVideoTypes();
-      case APIType.getVideos:
-        return getVideos();
-      case APIType.uploadFile:
-        return uploadFile();
+      case APIType.getData:
+        return getData();
       default:
         return null;
     }
   }
 
-  RequestOptions registerUser() {
+  RequestOptions getData() {
     return RequestOptions(
-      path: '/regusers/create.php',
-      method: APIMethod.post,
-    );
-  }
-
-  RequestOptions sendOtp() {
-    return RequestOptions(
-      path: '/otp/create.php',
-      method: APIMethod.post,
-    );
-  }
-
-  RequestOptions validateOtp() {
-    return RequestOptions(
-      path: '/otp/read.php',
-      method: APIMethod.post,
-    );
-  }
-
-  RequestOptions getVideoTypes() {
-    return RequestOptions(
-      path: '/vidtypes/read.php',
+      path: '',
       method: APIMethod.get,
-    );
-  }
-
-  RequestOptions getVideos() {
-    return RequestOptions(
-      path: '/videos/getvideos.php',
-      method: APIMethod.post,
-    );
-  }
-
-  RequestOptions uploadFile() {
-    return RequestOptions(
-      path: '/videos/process.php',
-      method: APIMethod.post,
     );
   }
 }

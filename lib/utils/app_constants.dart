@@ -1,7 +1,7 @@
 class AppConstants {
   // Common
-  static const String appName = 'Face Recognizer Demo';
-  static const String baseUrl = 'https://localhost/api';
+  static const String appName = 'iSentinel - Face Recognition';
+  static const String baseUrl = 'http://192.168.0.118:9595/api/base';
 
   // Messages
   static const String somethingWentWrong = 'Something went wrong';

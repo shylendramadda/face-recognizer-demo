@@ -2,9 +2,12 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart';
 // import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:fr_demo/data/models/file_data.dart';
+import 'package:fr_demo/data/models/face_detection.dart';
 import 'package:fr_demo/modules/home/home_controller.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -32,8 +35,9 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   HomeController homeController = Get.find();
-  List<String> allFileList = [];
+  List<FileData> fileDataList = [];
   List<String> videoTypeStrings = [];
+  List<FaceDetection>? faceDetections = [];
   bool isNetworkImage = false;
   bool isNetworkVideo = false;
   DateTime currentBackPressTime = DateTime.now();
@@ -49,8 +53,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void loadData() {
-    getLocalData();
-    // getServerData();
+    if (!kIsWeb) {
+      getLocalData();
+    }
+    getServerData();
     // getCurrentLocation();
   }
 
@@ -72,7 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onWillPop: onWillPop,
         child: Stack(
           children: [
-            allFileList.isNotEmpty
+            fileDataList.isNotEmpty
                 ? _buildListItems()
                 : const Center(child: Text('No data')),
             const ProgressView(),
@@ -99,19 +105,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildListItems() {
     return ListView.separated(
-      itemCount: allFileList.length,
+      itemCount: fileDataList.length,
       itemBuilder: (context, index) {
-        var filePath = allFileList[index].toString();
-        var fileName = filePath.split('/').last;
-        var isVideo = filePath.endsWith('.mp4');
-        if (isVideo) {
-          isNetworkVideo = AppUtils.isNetworkFile(filePath);
-        } else {
-          isNetworkImage = AppUtils.isNetworkFile(filePath);
-        }
+        var fileData = fileDataList[index];
+        final filePath = fileData.filePath.toString();
         return InkWell(
           onTap: () => onFileTap(filePath),
-          child: listItem(isVideo, isNetworkImage, filePath, fileName),
+          child: listItem(fileData),
         );
       },
       separatorBuilder: (_, __) =>
@@ -119,22 +119,26 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Container listItem(
-      bool isVideo, bool isNetworkImage, String filePath, String fileName) {
+  Container listItem(FileData fileData) {
     return Container(
       color: AppColors.white,
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          filePreviewImage(isVideo, isNetworkImage, filePath),
+          !kIsWeb ? filePreviewImage(fileData) : Container(),
           const SizedBox(width: 16),
-          fileContent(fileName, filePath),
+          fileContent(fileData),
         ],
       ),
     );
   }
 
-  Expanded fileContent(String fileName, String filePath) {
+  Expanded fileContent(FileData fileData) {
+    final filePath = fileData.filePath.toString();
+    var fileName = filePath.split('/').last;
+    final name = fileData.name;
+    bool isFromServer = filePath.startsWith(AppConstants.baseUrl) ||
+        (name != null && name.isNotEmpty);
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,17 +158,30 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           const SizedBox(height: 10),
+          Text(
+            fileData.name ?? 'No Name',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            fileData.dateTime ?? 'No Time',
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
           Row(
             children: [
-              !filePath.startsWith(AppConstants.baseUrl)
+              !isFromServer
                   ? GestureDetector(
                       child: const Icon(Icons.upload_file),
-                      onTap: () => startUpload(
-                          filePath)) //_showVideoTypeDialog(filePath, context))
+                      onTap: () => startUpload(filePath),
+                    ) //_showVideoTypeDialog(filePath, context))
                   : Container(),
-              const SizedBox(width: 40),
-              const SizedBox(width: 40),
-              !filePath.startsWith(AppConstants.baseUrl)
+              const SizedBox(width: 80),
+              !isFromServer
                   ? Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -182,8 +199,17 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Container filePreviewImage(
-      bool isVideo, bool isNetworkImage, String filePath) {
+  Container filePreviewImage(FileData fileData) {
+    final filePath = fileData.filePath.toString();
+    bool isVideo = false;
+    if (filePath.isNotEmpty) {
+      isVideo = filePath.endsWith('.mp4');
+      if (isVideo) {
+        isNetworkVideo = AppUtils.isNetworkFile(filePath);
+      } else {
+        isNetworkImage = AppUtils.isNetworkFile(filePath);
+      }
+    }
     return Container(
       height: 80,
       width: 80,
@@ -191,17 +217,27 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.circular(12),
         color: Colors.grey[300],
       ),
-      child: !isVideo
-          ? isNetworkImage
-              ? CachedNetworkImage(
-                  imageUrl: filePath,
-                  placeholder: (context, url) =>
-                      const CircularProgressIndicator(),
-                  errorWidget: (context, url, error) => const Icon(Icons.error),
+      child: filePath.isNotEmpty
+          ? !isVideo
+              ? isNetworkImage
+                  ? CachedNetworkImage(
+                      imageUrl: filePath,
+                      placeholder: (context, url) =>
+                          const CircularProgressIndicator(),
+                      errorWidget: (context, url, error) =>
+                          const Icon(Icons.error),
+                    )
+                  : Image.file(File(filePath))
+              : Image.asset(
+                  'assets/images/person.png',
+                  width: 300,
+                  height: 200,
                 )
-              : Image.file(File(filePath))
-          : Image.asset('assets/images/video_preview.png',
-              width: 300, height: 200),
+          : Image.asset(
+              'assets/images/video_preview.png',
+              width: 300,
+              height: 200,
+            ),
     );
   }
 
@@ -240,7 +276,9 @@ class _HomeScreenState extends State<HomeScreen> {
           var filePath = file.path.toString();
           if (AppUtils.isSupportedFormat(filePath)) {
             debugPrint('Path: ${file.path}');
-            allFileList.insert(0, file.path.toString());
+            final fileData = FileData();
+            fileData.filePath = file.path.toString();
+            fileDataList.insert(0, fileData);
           }
         }
         setState(() {});
@@ -256,22 +294,40 @@ class _HomeScreenState extends State<HomeScreen> {
   getLocalData() async {
     final directory = await getApplicationDocumentsDirectory();
     List<FileSystemEntity> fileList = await directory.list().toList();
-    allFileList.clear();
+    fileDataList.clear();
 
     for (var file in fileList) {
       var filePath = file.path.toString();
       if (AppUtils.isSupportedFormat(filePath)) {
-        allFileList.add(filePath);
+        final fileData = FileData();
+        fileData.filePath = filePath;
+        fileDataList.add(fileData);
       }
     }
     setState(() {});
   }
 
   getServerData() async {
-    final isExists = await AppUtils.isNetworkAvailable();
-    if (!isExists) {
-      AppUtils.showToast(AppConstants.noInternet);
-      return null;
+    faceDetections = [];
+    faceDetections?.clear();
+    fileDataList.clear();
+    // final isExists = await AppUtils.isNetworkAvailable();
+    // if (!isExists) {
+    //   AppUtils.showToast(AppConstants.noInternet);
+    //   return null;
+    // }
+    faceDetections = await homeController.getServerData();
+    if (faceDetections != null && faceDetections!.isNotEmpty) {
+      for (FaceDetection fd in faceDetections!) {
+        final fileData = FileData();
+        fileData.name = fd.name;
+        fileData.dateTime = AppUtils.getDate(fd.faceDetectedOn ?? 0);
+        fileDataList.add(fileData);
+        // if (AppUtils.isSupportedFormat(fd.)) {
+        //   allFileList.add(AppConstants.fileBaseUrl + fd.);
+        // }
+      }
+      setState(() {});
     }
   }
 
@@ -330,8 +386,9 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final file = File(filePath);
       await file.delete();
-      final oldFile = allFileList.firstWhere((element) => element == filePath);
-      allFileList.remove(oldFile);
+      final oldFile =
+          fileDataList.firstWhere((element) => element.filePath == filePath);
+      fileDataList.remove(oldFile);
       setState(() {
         AppUtils.showToast("File is deleted");
       });

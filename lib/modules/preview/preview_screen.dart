@@ -13,7 +13,7 @@ import '../components/progress_bar/progress_view.dart';
 import '../home/home_controller.dart';
 
 String filePath = '';
-String fileName = '';
+String fileName = 'Preview';
 bool isVideo = false;
 bool isNetworkImage = false;
 bool isNetworkVideo = false;
@@ -37,7 +37,9 @@ class _PreviewScreenState extends State<PreviewScreen> {
   void initState() {
     var arguments = Get.arguments;
     filePath = arguments['filePath'].toString();
-    fileName = filePath.split('/').last;
+    if (filePath.isNotEmpty) {
+      fileName = filePath.split('/').last;
+    }
     isVideo = filePath.endsWith('.mp4');
     if (isVideo) {
       isNetworkVideo = AppUtils.isNetworkFile(filePath);

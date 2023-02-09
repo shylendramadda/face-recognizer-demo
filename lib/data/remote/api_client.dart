@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:fr_demo/data/remote/log_interceptor.dart';
+import 'package:fr_demo/modules/components/progress_bar/progress_controller.dart';
 
 import '../../utils/app_constants.dart';
 import 'api_response.dart';
@@ -25,6 +26,11 @@ class APIClient {
     dynamic data,
   }) async {
     final config = route.getConfig();
+    config?.headers.addAll({
+      "tenantUid": "test",
+      "tuid": "test",
+      "Authorization": "Basic YWRtaW46YWRtaW4="
+    });
     if (config == null) {
       throw ErrorResponse(errorSummary: AppConstants.requestFailed);
     }
@@ -39,6 +45,7 @@ class APIClient {
       final response = await instance.fetch(config);
       return ResponseWrapper.init(create: create, data: response.data);
     } on DioError catch (err) {
+      ProgressController.showLoader();
       if (err.response != null) {
         throw ErrorResponse.fromJson(err.response?.data);
       } else {
