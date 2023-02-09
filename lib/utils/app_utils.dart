@@ -44,12 +44,12 @@ class AppUtils {
     );
   }
 
-  static Future<String> getFileSize(String filepath, int decimals) async {
-    if (filepath.startsWith("https")) {
+  static Future<String> getFileSize(String filePath, int decimals) async {
+    if (isNetworkFile(filePath)) {
       return '';
     }
-    if (filepath.isNotEmpty) {
-      var file = File(filepath);
+    if (filePath.isNotEmpty) {
+      var file = File(filePath);
       int bytes = await file.length();
       if (bytes <= 0) return "0 B";
       const suffixes = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];

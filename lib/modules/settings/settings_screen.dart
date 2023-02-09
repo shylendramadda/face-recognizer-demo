@@ -15,6 +15,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   TextEditingController urlController = TextEditingController();
 
   @override
+  void initState() {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      urlController.text = await getURL();
+    });
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -50,7 +58,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           MaterialStateProperty.all(AppColors.secondary)),
                   onPressed: () => _saveURL(urlController.text),
                   child: const Text(
-                    'Save',
+                    'Update URL',
                     style: TextStyle(color: Colors.white),
                   ),
                 )),
@@ -61,8 +69,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _saveURL(String url) {
-    PreferenceUtils.setString(AppConstants.url, url);
-    AppConstants.baseUrl = url;
-    AppUtils.showToast('URL Saved');
+    if (url.isNotEmpty &&
+        !(url.startsWith('http') && url.startsWith('https'))) {
+      AppConstants.baseUrl = url;
+      PreferenceUtils.setString(AppConstants.url, url);
+      AppUtils.showToast('URL Updated');
+    } else {
+      AppUtils.showToast('Enter a valid URL');
+    }
+  }
+
+  Future<String> getURL() async {
+    return PreferenceUtils.getString(AppConstants.url, defaultValue: '') ?? '';
   }
 }

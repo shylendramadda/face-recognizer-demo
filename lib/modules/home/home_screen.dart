@@ -3,9 +3,9 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
-// import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:fr_demo/data/local/preference_utils.dart';
 import 'package:fr_demo/data/models/file_data.dart';
 import 'package:fr_demo/data/models/face_detection.dart';
 import 'package:fr_demo/modules/home/home_controller.dart';
@@ -22,7 +22,6 @@ import '../../utils/app_colors.dart';
 import '../../utils/app_constants.dart';
 import '../../utils/app_utils.dart';
 import '../components/progress_bar/progress_view.dart';
-// import 'package:universal_html/html.dart' as html;
 
 List<CameraDescription> cameras = [];
 
@@ -38,8 +37,6 @@ class _HomeScreenState extends State<HomeScreen> {
   List<FileData> fileDataList = [];
   List<String> videoTypeStrings = [];
   List<FaceDetection>? faceDetections = [];
-  bool isNetworkImage = false;
-  bool isNetworkVideo = false;
   DateTime currentBackPressTime = DateTime.now();
   String selectedVideoType = 'Other';
 
@@ -47,6 +44,10 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final url = PreferenceUtils.getString(AppConstants.url);
+      if (url != null && url.isNotEmpty) {
+        AppConstants.baseUrl = url;
+      }
       getCameras();
       loadData();
     });
@@ -139,11 +140,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Expanded fileContent(FileData fileData) {
-    final filePath = fileData.filePath ?? '';
-    var fileName = filePath.split('/').last;
-    final name = fileData.name;
-    bool isFromServer = filePath.startsWith(AppConstants.baseUrl) ||
-        (name != null && name.isNotEmpty);
+    String filePath = fileData.filePath ?? '';
+    String fileName = filePath.split('/').last;
+    String name = fileData.name ?? '';
+    String score = '';
+    bool isFromServer = name.isNotEmpty;
+    if (isFromServer) {
+      final names = fileData.name!.split(':');
+      name = names[0];
+      score = names[1];
+    }
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -167,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 10),
           Text(
-            fileData.name ?? 'No Name',
+            name,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
@@ -175,11 +181,24 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 10),
           Text(
             fileData.dateTime ?? 'No Time',
-            maxLines: 2,
+            maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(20),
+            child: TextButton(
+              style: ButtonStyle(
+                  backgroundColor:
+                      MaterialStateProperty.all(AppColors.secondary)),
+              onPressed: _doNothing(),
+              child: Text(
+                score,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
           Row(
             children: [
               !isFromServer
@@ -208,16 +227,25 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Container filePreviewImage(FileData fileData) {
-    final filePath = fileData.filePath ?? '';
     bool isVideo = false;
+    bool isNetworkImage = false;
+    final name = fileData.name ?? '';
+    String filePath = fileData.filePath ?? '';
+    // if server image
+    if (name.isNotEmpty && name.contains(':')) {
+      final names = name.split(":");
+      filePath = names.last;
+      isNetworkImage = true;
+    }
+
     if (filePath.isNotEmpty) {
       isVideo = filePath.endsWith('.mp4');
-      if (isVideo) {
-        isNetworkVideo = AppUtils.isNetworkFile(filePath);
-      } else {
-        isNetworkImage = AppUtils.isNetworkFile(filePath);
-      }
+      // if (isVideo) {
+      // } else {
+      //   isNetworkImage = AppUtils.isNetworkFile(filePath);
+      // }
     }
+
     return Container(
       height: 80,
       width: 80,
@@ -229,7 +257,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ? !isVideo
               ? isNetworkImage
                   ? CachedNetworkImage(
-                      imageUrl: filePath,
+                      imageUrl: AppConstants.imageBaseUrl + filePath,
                       placeholder: (context, url) =>
                           const CircularProgressIndicator(),
                       errorWidget: (context, url, error) =>
@@ -254,17 +282,6 @@ class _HomeScreenState extends State<HomeScreen> {
       WidgetsFlutterBinding.ensureInitialized();
       cameras = await availableCameras();
       debugPrint('Cameras ---> $cameras');
-      // if (kIsWeb) {
-      //   final perm =
-      //       await html.window.navigator.permissions?.query({"name": "camera"});
-      //   if (perm?.state == "denied") {
-      //     final status = await html.window.navigator.permissions
-      //         ?.query({"name": "camera"});
-      //     debugPrint(
-      //         'Cameras permission status in web ---> ${status?.state.toString()}');
-      //     await html.window.navigator.getUserMedia(audio: true, video: true);
-      //   }
-      // }
     } on CameraException catch (e) {
       AppUtils.showToast(AppConstants.noCameras);
       debugPrint('Error in fetching the cameras: $e');
@@ -442,4 +459,6 @@ class _HomeScreenState extends State<HomeScreen> {
       loadData();
     }
   }
+
+  _doNothing() {}
 }

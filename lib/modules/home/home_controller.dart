@@ -1,8 +1,5 @@
 // ignore_for_file: avoid_print
 
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:fr_demo/data/models/face_detection.dart';
 import 'package:fr_demo/utils/app_utils.dart';
@@ -78,11 +75,11 @@ class HomeController extends GetxController {
       if (res.statusCode == 200) {
         final respString = await res.stream.bytesToString();
         debugPrint('respString: $respString');
-        const JsonCodec json = JsonCodec();
-        final ResponseMessage decodedResponse = json.decode(respString);
+        // const JsonCodec json = JsonCodec();
+        // final ResponseMessage decodedResponse = json.decode(respString);
 
         AppUtils.showToast(AppConstants.fileUploadSuccess);
-        processFile(decodedResponse);
+        processFile();
         return true;
       } else {
         AppUtils.showToast(AppConstants.uploadIssue);
@@ -108,7 +105,7 @@ class HomeController extends GetxController {
     return null;
   }
 
-  Future<void> processFile(ResponseMessage decodedResponse) async {
+  Future<void> processFile() async {
     try {
       ResponseMessage? response = await remoteService.processFile();
       if (response != null) {

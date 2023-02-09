@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:fr_demo/utils/app_constants.dart';
 import 'package:get/get.dart';
 
 import '../../../config/routes.dart';
@@ -33,7 +34,21 @@ class SplashState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Image.asset('assets/images/logo.png', width: 300, height: 200),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              AppConstants.companyName,
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Image.asset('assets/images/logo.png', width: 300, height: 200)
+          ],
+        ),
       ),
     );
   }
