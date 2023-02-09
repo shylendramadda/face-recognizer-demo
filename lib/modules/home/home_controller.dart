@@ -66,8 +66,8 @@ class HomeController extends GetxController {
         AppUtils.showToast('File extension was not found');
         return false;
       }
-      final file = await http.MultipartFile.fromPath('image', filePath,
-          contentType: MediaType('application', fileExtension));
+      final file = await http.MultipartFile.fromPath('file', filePath,
+          contentType: MediaType('image', fileExtension));
       request.files.add(file);
       var res = await request.send();
 
