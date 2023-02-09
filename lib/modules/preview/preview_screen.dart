@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:fr_demo/utils/app_constants.dart';
 import 'package:get/get.dart';
 import 'package:toast/toast.dart';
 import 'package:video_player/video_player.dart';
@@ -33,8 +34,17 @@ class _PreviewScreenState extends State<PreviewScreen> {
   void initState() {
     var arguments = Get.arguments;
     filePath = arguments['filePath'].toString();
+    String name = arguments['name'].toString();
     if (filePath.isNotEmpty) {
-      fileName = filePath.split('/').last;
+      if (name.isNotEmpty && name.contains(':')) {
+        final names = name.split(":");
+        filePath = names.last;
+        filePath = AppConstants.imageBaseUrl + filePath;
+        isNetworkImage = true;
+      } else {
+        isNetworkImage = false;
+        fileName = filePath.split('/').last;
+      }
       isVideo = filePath.endsWith('.mp4');
       if (isVideo) {
         isNetworkVideo = AppUtils.isNetworkFile(filePath);
@@ -62,7 +72,7 @@ class _PreviewScreenState extends State<PreviewScreen> {
                     ElevatedButton(
                         child: const Text('Go to all captures'),
                         onPressed: () => Get.offAllNamed(Routes.home)),
-                    !filePath.startsWith('https')
+                    !AppUtils.isNetworkFile(filePath)
                         ? ElevatedButton(
                             child: const Text('Upload'),
                             onPressed: () => startUpload(filePath)
@@ -83,6 +93,12 @@ class _PreviewScreenState extends State<PreviewScreen> {
                                         const CircularProgressIndicator(),
                                     errorWidget: (context, url, error) =>
                                         const Icon(Icons.error),
+                                    // ignore: prefer_const_literals_to_create_immutables
+                                    httpHeaders: {
+                                      "tenantUid": "test",
+                                      "tuid": "test",
+                                      "Authorization": "Basic YWRtaW46YWRtaW4="
+                                    },
                                   )
                                 : Image.file(File(filePath))
                         : Image.asset(

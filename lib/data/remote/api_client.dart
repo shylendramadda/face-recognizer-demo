@@ -20,6 +20,10 @@ class APIClient {
     instance.interceptors.addAll(interceptors);
   }
 
+  void setBaseUrl(String baseUrl) {
+    options.baseUrl = baseUrl;
+  }
+
   Future<ResponseWrapper<T>> request<T extends Decodable<dynamic>>({
     required APIRouteConfigurable route,
     required Create<T> create,

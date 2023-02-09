@@ -13,7 +13,7 @@ class FaceDetection extends Decodable<FaceDetection> {
     name = json['name'] ?? '';
     brief = json['brief'] ?? '';
     uuid = json['uuid'] ?? '';
-    uuid = json['filePath'] ?? '';
+    filePath = json['filePath'] ?? '';
     faceDetectedOn = json['faceDetectedOn'] ?? '';
   }
 

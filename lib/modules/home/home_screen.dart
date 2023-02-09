@@ -44,16 +44,16 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final url = PreferenceUtils.getString(AppConstants.url);
-      if (url != null && url.isNotEmpty) {
-        AppConstants.baseUrl = url;
-      }
       getCameras();
       loadData();
     });
   }
 
   void loadData() {
+    final url = PreferenceUtils.getString(AppConstants.url);
+    if (url != null && url.isNotEmpty) {
+      AppConstants.baseUrl = url;
+    }
     if (!kIsWeb) {
       getLocalData();
     }
@@ -114,9 +114,14 @@ class _HomeScreenState extends State<HomeScreen> {
       itemCount: fileDataList.length,
       itemBuilder: (context, index) {
         var fileData = fileDataList[index];
-        final filePath = fileData.filePath ?? '';
+        String filePath = '';
+        final name = fileData.name ?? '';
+        if (name.isNotEmpty && name.contains(':')) {
+          final names = name.split(":");
+          filePath = names.last;
+        }
         return InkWell(
-          onTap: () => onFileTap(filePath),
+          onTap: () => onFileTap(filePath, name),
           child: listItem(fileData),
         );
       },
@@ -186,19 +191,21 @@ class _HomeScreenState extends State<HomeScreen> {
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.all(20),
-            child: TextButton(
-              style: ButtonStyle(
-                  backgroundColor:
-                      MaterialStateProperty.all(AppColors.secondary)),
-              onPressed: _doNothing(),
-              child: Text(
-                score,
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
-          ),
+          score.isNotEmpty
+              ? Container(
+                  padding: const EdgeInsets.all(20),
+                  child: TextButton(
+                    style: ButtonStyle(
+                        backgroundColor:
+                            MaterialStateProperty.all(getScoreColor(score))),
+                    onPressed: _doNothing(),
+                    child: Text(
+                      score,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                )
+              : Container(),
           Row(
             children: [
               !isFromServer
@@ -257,11 +264,17 @@ class _HomeScreenState extends State<HomeScreen> {
           ? !isVideo
               ? isNetworkImage
                   ? CachedNetworkImage(
-                      imageUrl: AppConstants.imageBaseUrl + filePath,
+                      imageUrl: filePath,
                       placeholder: (context, url) =>
                           const CircularProgressIndicator(),
                       errorWidget: (context, url, error) =>
                           const Icon(Icons.error),
+                      // ignore: prefer_const_literals_to_create_immutables
+                      httpHeaders: {
+                        "tenantUid": "test",
+                        "tuid": "test",
+                        "Authorization": "Basic YWRtaW46YWRtaW4="
+                      },
                     )
                   : Image.file(File(filePath))
               : Image.asset(
@@ -353,8 +366,11 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  onFileTap(String filePath) {
-    Get.toNamed(Routes.preview, arguments: {"filePath": filePath});
+  onFileTap(String filePath, String name) {
+    Get.toNamed(Routes.preview, arguments: {
+      "filePath": filePath,
+      "name": name,
+    });
   }
 
   Future<bool> onWillPop() {
@@ -461,4 +477,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   _doNothing() {}
+
+  Color? getScoreColor(String score) {
+    if (score == 'high') {
+      return Colors.green;
+    } else if (score == 'medium') {
+      return Colors.yellow;
+    } else {
+      return Colors.red;
+    }
+  }
 }

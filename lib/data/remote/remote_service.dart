@@ -11,6 +11,7 @@ class RemoteService extends GetxService {
   final apiClient = APIClient();
 
   Future<List<FaceDetection>?> getData() async {
+    apiClient.setBaseUrl(AppConstants.baseUrl);
     // if (await checkNetwork()) {
     if (true) {
       final result = await apiClient.request(
@@ -26,6 +27,7 @@ class RemoteService extends GetxService {
   }
 
   Future<ResponseMessage?> processFile() async {
+    apiClient.setBaseUrl(AppConstants.baseUrl);
     final result = await apiClient.request(
       route: APIRoute(APIType.processFile),
       create: () =>
