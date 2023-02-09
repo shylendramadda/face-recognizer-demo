@@ -176,7 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   : Container();
             },
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 1),
           Text(
             name,
             maxLines: 2,
@@ -190,7 +190,7 @@ class _HomeScreenState extends State<HomeScreen> {
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 5),
           score.isNotEmpty
               ? Container(
                   padding: const EdgeInsets.all(20),
@@ -482,9 +482,9 @@ class _HomeScreenState extends State<HomeScreen> {
     if (score == 'high') {
       return Colors.green;
     } else if (score == 'medium') {
-      return Colors.yellow;
+      return Colors.lightGreen;
     } else {
-      return Colors.red;
+      return Colors.grey[600];
     }
   }
 }
