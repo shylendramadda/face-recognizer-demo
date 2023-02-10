@@ -119,6 +119,8 @@ class _HomeScreenState extends State<HomeScreen> {
         if (name.isNotEmpty && name.contains(':')) {
           final names = name.split(":");
           filePath = names.last;
+        } else {
+          filePath = fileData.filePath!;
         }
         return InkWell(
           onTap: () => onFileTap(filePath, name),
@@ -177,13 +179,16 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           ),
           const SizedBox(height: 1),
-          Text(
-            name,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 10),
+          isFromServer
+              ? Text(
+                  name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.bold),
+                )
+              : Container(),
+          const SizedBox(height: 5),
           Text(
             fileData.dateTime ?? 'No Time',
             maxLines: 1,
