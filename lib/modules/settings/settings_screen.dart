@@ -58,7 +58,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           MaterialStateProperty.all(AppColors.secondary)),
                   onPressed: () => _saveURL(urlController.text),
                   child: const Text(
-                    'Update URL',
+                    'Update',
                     style: TextStyle(color: Colors.white),
                   ),
                 )),
